@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 with open('config.json') as f:
     config = json.load(f)
 
-api = BingXApi(APIKEY=config['api_key'], SECRETKEY=config['api_secret'], demo=True)
+api = BingXApi(APIKEY=config['api_key'], SECRETKEY=config['api_secret'], demo=False)
 
 
 class BingX:
@@ -34,6 +34,7 @@ Bingx = BingX()
 
 
 def placeOrders(symbol, side, tradeType, positionSide, price, qty, leverage):
+	positionSide_db = positionSide
 	res = api.setLeverage(symbol=symbol, side=positionSide, leverage=leverage)
 	logger.info(f"set leverage---{symbol}--- {res}")
 
@@ -64,18 +65,7 @@ def placeOrders(symbol, side, tradeType, positionSide, price, qty, leverage):
                      tradeType='TRIGGER_LIMIT')
 	logger.info(f"{res}")
 	#
-	from models import Signal
-	signal = Signal()
-	signal.symbol = symbol
-	signal.side = side
-	signal.price = price
-	# signal.time = datetime.fromtimestamp(time_/1000)
-	signal.time = datetime.now().strftime('%y-%m-%d %H:%M:%S')
-	db = SessionLocal()
-	db.add(signal)
-	db.commit()
-	db.close()
-	logger.info(f"load to sqlite. {symbol}---{side}---{datetime.now().strftime('%y-%m-%d %H:%M:%S')}")
+	add_to_db(symbol=symbol, positionSide_db=positionSide_db, price=price, qty=qty)
 
 
 def place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL):
@@ -113,4 +103,24 @@ def triger_action(symbol, side, positionSide, price, qty, TP, SL):
 	res = api.closeOrders(symbol=symbol)
 	logger.info(f"{res}")
 	place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL)
+
+	add_to_db(symbol=symbol, positionSide_db=positionSide, price=price, qty=qty)
 	
+
+
+def add_to_db(symbol, positionSide_db, price, qty):
+		from models import Signal
+		signal = Signal()
+		signal.symbol = symbol
+		signal.side = positionSide_db
+		signal.price = price
+		signal.qty = qty
+		# signal.time = datetime.fromtimestamp(time_/1000)
+		signal.time = datetime.now().strftime('%y-%m-%d %H:%M:%S')
+		db = SessionLocal()
+		db.add(signal)
+		db.commit()
+		db.close()
+		logger.info(f"load to sqlite. {symbol}---{positionSide_db}---{datetime.now().strftime('%y-%m-%d %H:%M:%S')}")
+
+
