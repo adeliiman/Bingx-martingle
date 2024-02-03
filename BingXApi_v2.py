@@ -132,6 +132,28 @@ class BingXApi:
             return self.send_request(method, path, paramsStr, payload)
 
 
+        def closeAllOrders(self):
+            payload = {}
+            path = '/openApi/swap/v2/trade/allOpenOrders'
+            method = "DELETE"
+            paramsMap = {
+            "recvWindow": 0
+            }
+            paramsStr = self.praseParam(paramsMap)
+            return self.send_request(method, path, paramsStr, payload)
+
+
+        def closeOrders(self, symbol):
+            payload = {}
+            path = '/openApi/swap/v2/trade/allOpenOrders'
+            method = "DELETE"
+            paramsMap = {
+            "recvWindow": 0,
+            "symbol": symbol,
+            }
+            paramsStr = self.praseParam(paramsMap)
+            return self.send_request(method, path, paramsStr, payload)
+
 
         def setLeverage(self, symbol, side, leverage):
             payload = {}
@@ -187,6 +209,7 @@ class BingXApi:
 
 
 # api = BingXApi(APIKEY=config['api_key'], SECRETKEY=config['api_secret'], demo=False)
+# print(api.closeAllOrders())
 # print(api.getBalance())
 # print(api.getPositions(symbol="BTC-USDT")['data'][0])
 # print(api.getOrders("BTC-USDT"))
@@ -195,8 +218,12 @@ class BingXApi:
 # print(api.placeOrder(symbol="BTC-USDT", side="BUY",positionSide="LONG", price='42000', quantity=.0001, tradeType='MARKET'))
 # print(api.placeOrder(symbol="BTC-USDT", side="SELL",positionSide="LONG", stopPrice='40000', price=42000, quantity=1, tradeType='STOP'))
 # print(api.placeOrder(symbol="BTC-USDT", side="SELL",positionSide="LONG", stopPrice='46500', price=42000, quantity=1, tradeType='TAKE_PROFIT'))
-
-
+# res = api.placeOrder(symbol="BTC-USDT", side="BUY",positionSide="LONG", price='43000', quantity=.0001, 
+#                      tradeType='TRIGGER_LIMIT', stopPrice='43000')
+# res = api.placeOrder(symbol="BTC-USDT", side="BUY",positionSide="LONG", price='44000', quantity=.0001, 
+#                      tradeType='LIMIT', stopPrice='44000')
+# print(res)
+# print(api.getOrders(symbol='BTC-USDT'))
 
 # print(api.getLatestPrice(symbol='BTC-USDT'))
 # print(api.setMarginMode("BTC-USDT", "ISOLATED"))

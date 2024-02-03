@@ -72,20 +72,20 @@ class UserSymbols(Base):
     __tablename__ = "user-symbols"
     id = Column(Integer,primary_key=True)
     symbol = Column(String)
-    side = Column(String)
+    position_side = Column(String)
 
 class UserSymbolAdmin(ModelView, model=UserSymbols):
-    column_list = [UserSymbols.id, UserSymbols.symbol, UserSymbols.side
+    column_list = [UserSymbols.id, UserSymbols.symbol, UserSymbols.position_side
                    ]
     name = "symbol"
     name_plural = "User Symbols"
     icon = "fa-sharp fa-solid fa-bitcoin-sign"
-    column_sortable_list = [UserSymbols.symbol, UserSymbols.id, UserSymbols.side]
-    column_searchable_list = [UserSymbols.symbol, UserSymbols.id, UserSymbols.side]
+    column_sortable_list = [UserSymbols.symbol, UserSymbols.id, UserSymbols.position_side]
+    column_searchable_list = [UserSymbols.symbol, UserSymbols.id, UserSymbols.position_side]
     page_size = 100
-    form_overrides = dict(symbol=wtforms.StringField, side=wtforms.SelectField)
+    form_overrides = dict(symbol=wtforms.StringField, position_side=wtforms.SelectField)
     form_args = dict(symbol=dict(validators=[wtforms.validators.regexp('.+[A-Z]-USDT')], label="symbol(BTC-USDT)"),
-                     side=dict(choices=["SELL", "BUY"]))
+                     position_side=dict(choices=["SHORT", "LONG"]))
     
     # async def on_model_change(self, data, model, is_created):
     #     print(is_created)

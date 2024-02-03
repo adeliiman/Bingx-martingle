@@ -16,59 +16,52 @@ logger = get_logger(__name__)
 with open('config.json') as f:
     config = json.load(f)
 
-api = BingXApi(APIKEY=config['api_key'], SECRETKEY=config['api_secret'], demo=False)
+api = BingXApi(APIKEY=config['api_key'], SECRETKEY=config['api_secret'], demo=True)
 
 
 class BingX:
 	bot: str = 'Stop' # 'Run'
 	leverage: int 
+	TP_percent: float
+	SL_percent: float
+	trade_value: int
 	symbols: list = []
       
 
 Bingx = BingX()
 
 
-# def schedule_kline():
-# 	second_ = time.gmtime().tm_sec
-# 	min_ = time.gmtime().tm_min
-# 	hour_ = time.gmtime().tm_hour
 
 
-# def schedule_job():
-# 	schedule.every(1).minutes.at(":02").do(schedule_kline)
-# 	while True:
-# 		if Bingx.bot == "Stop":
-# 			schedule.clear()
-# 			break
-# 		schedule.run_pending()
-# 		# print(time.ctime(time.time()))
-# 		time.sleep(1)
-
-
-
-
-
-def placeOrder(symbol, side, tradeType, positionSide, price, qty, leverage):
+def placeOrders(symbol, side, tradeType, positionSide, price, qty, leverage):
 	res = api.setLeverage(symbol=symbol, side=positionSide, leverage=leverage)
 	logger.info(f"set leverage---{symbol}--- {res}")
 
-	# if side == "BUY":
-	# 	TP = price * (1 + TP/100)
-	# 	SL = price * (1 - SL/100)
-	# else:
-	# 	TP = price * (1 - TP/100)
-	# 	SL = price * (1 + SL/100)
-	# print(symbol, side, margin, Bingx.TP_percent, Bingx.SL_percent)
-	# logger.info(f"{symbol}---{side}---{price}---{qty}")
+	if positionSide == "LONG":
+		TP = price * (1 + Bingx.TP_percent/100)
+		SL = price * (1 - Bingx.SL_percent/100)
+	else:
+		TP = price * (1 - Bingx.TP_percent/100)
+		SL = price * (1 + Bingx.SL_percent/100)
 
-	# take_profit = "{\"type\": \"TAKE_PROFIT_MARKET\", \"quantity\": %s,\"stopPrice\": %s,\"price\": %s,\"workingType\":\"MARK_PRICE\"}"% (qty, TP, TP)
-	# stop_loss = "{\"type\": \"STOP_MARKET\", \"quantity\": %s,\"stopPrice\": %s,\"price\": %s,\"workingType\":\"MARK_PRICE\"}"% (qty, SL, SL)
+	take_profit = "{\"type\": \"TAKE_PROFIT_MARKET\", \"quantity\": %s,\"stopPrice\": %s,\"price\": %s,\"workingType\":\"MARK_PRICE\"}"% (qty, TP, TP)
+	stop_loss = "{\"type\": \"STOP_MARKET\", \"quantity\": %s,\"stopPrice\": %s,\"price\": %s,\"workingType\":\"MARK_PRICE\"}"% (qty, SL, SL)
 	res = api.placeOrder(symbol=symbol, side=f"{side}", positionSide=f"{positionSide}", tradeType=tradeType, 
 				quantity=qty, 
 				# quoteOrderQty=margin,
-				#takeProfit=take_profit,
-				#stopLoss=stop_loss
+				takeProfit=take_profit,
+				stopLoss=stop_loss
 				)
+	logger.info(f"{res}")
+	# trigger limit orders
+	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, price=TP, stopPrice=TP, quantity=qty, 
+                     tradeType='TRIGGER_LIMIT')
+	logger.info(f"{res}")
+	# 
+	side = "SELL" if side == "BUY" else "BUY"
+	positionSide = "SHORT" if positionSide == "LONG" else "LONG"
+	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, price=SL, stopPrice=SL, quantity=2*qty, 
+                     tradeType='TRIGGER_LIMIT')
 	logger.info(f"{res}")
 	#
 	from models import Signal
@@ -85,27 +78,39 @@ def placeOrder(symbol, side, tradeType, positionSide, price, qty, leverage):
 	logger.info(f"load to sqlite. {symbol}---{side}---{datetime.now().strftime('%y-%m-%d %H:%M:%S')}")
 
 
-def place_order(symbol, side, price, qty, leverage, TP, SL):
-	if side == "BUY":
-		TP = price * (1 + TP/100)
-		SL = price * (1 - SL/100)
+def place_tp_sl_limit(symbol, side, positionSide, price, qty):
+	if positionSide == "LONG":
+		TP = price * (1 + Bingx.TP_percent/100)
+		SL = price * (1 - Bingx.SL_percent/100)
 		side = "SELL"
-		positionSide = "LONG"
 	else:
-		TP = price * (1 - TP/100)
-		SL = price * (1 + SL/100)
+		TP = price * (1 - Bingx.TP_percent/100)
+		SL = price * (1 + Bingx.SL_percent/100)
 		side = "BUY"
-		positionSide = "LONG"
 
-	res = api.placeOrder(symbol=symbol, side=side,positionSide=positionSide, 
-					  stopPrice=SL, price=price, quantity=qty, tradeType='STOP')
-	logger.info(f"res")
+	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, 
+					  stopPrice=SL, price=SL, quantity=qty, tradeType='STOP')
+	logger.info(f"{res}")
 
-	res = api.placeOrder(symbol=symbol, side=side,positionSide=positionSide, 
-					  stopPrice=TP, price=price, quantity=qty, tradeType='TAKE_PROFIT')
-	logger.info(f"res")
+	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, 
+					  stopPrice=TP, price=TP, quantity=qty, tradeType='TAKE_PROFIT')
+	logger.info(f"{res}")
 	
-	# limit order
-	res = api.placeOrder(symbol=symbol, side=side,positionSide=positionSide, 
-					  stopPrice=SL, price=price, quantity=qty, tradeType='LIMIT')
-	logger.info(f"res")
+	# trigger limit orders
+	side = "SELL" if positionSide == "SHORT" else "BUY"
+	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, price=TP, stopPrice=TP, quantity=qty, 
+                     tradeType='TRIGGER_LIMIT')
+	logger.info(f"{res}")
+	# 
+	positionSide = "SHORT" if positionSide == "LONG" else "LONG"
+	side = "SELL" if positionSide == "SHORT" else "BUY"
+	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, price=SL, stopPrice=SL, quantity=2*qty, 
+                     tradeType='TRIGGER_LIMIT')
+	logger.info(f"{res}")
+
+
+def triger_action(symbol, side, positionSide, price, qty):
+	res = api.closeOrders(symbol=symbol)
+	logger.info(f"{res}")
+	place_tp_sl_limit(symbol, side, positionSide, price, qty)
+	

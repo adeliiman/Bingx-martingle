@@ -8,7 +8,7 @@ from sqladmin import Admin
 from setLogger import get_logger
 from fastapi.responses import RedirectResponse
 from main import Bingx
-from utils import get_user_params
+from utils import get_user_params, init_orders
 from contextlib import asynccontextmanager
 import httpx, threading
 from BingXWebsocketV2 import Bingx_socket
@@ -37,9 +37,8 @@ admin.add_view(SignalAdmin)
 async def run(tasks: BackgroundTasks, db: Session=Depends(get_db)):
     get_user_params(db=db)
     Bingx.bot = "Run"
-
-    threading.Thread(target=Bingx_socket).start()
-    # tasks.add_task(Bingx_socket, Bingx)
+    tasks.add_task(init_orders)
+    # threading.Thread(target=Bingx_socket).start()
     
     logger.info("Bingx started ... ... ...")
     return  RedirectResponse(url="/admin/home")
@@ -57,6 +56,8 @@ def closeAll():
     from main import api
     res = api.closeAllPositions()
     logger.info("Close All Positions." + str(res))
+    res = api.closeAllOrders()
+    logger.info("Close All Orders." + str(res))
     return  RedirectResponse(url="/admin/home")
 
 
@@ -73,12 +74,6 @@ def get_positions(symbol:str):
 @app.get('/')
 async def index():
      return  RedirectResponse(url="/admin/home")
-
-
-@app.get('/add_all_symbols')
-async def add_all_symbols(db: Session=Depends(get_db)):
-    from utils import add_all_symbols
-    add_all_symbols(db)
 
 
 

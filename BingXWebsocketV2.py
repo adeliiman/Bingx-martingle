@@ -19,6 +19,7 @@ class BingxWS:
         self.sub = sub
         self.Bingx = Bingx
         self.ws = None
+        self.extendListenKeyStatus = False
         self.APIKEY = config['api_key']
         self.headers = {
             'Host': 'open-api-swap.bingx.com',
@@ -49,15 +50,16 @@ class BingxWS:
 
 
     def on_message(self, ws, msg):
-        print(msg)
+        #print(msg)
         data = gzip.decompress(msg)
         data = str(data,'utf-8')
         if self.Bingx.bot == "Stop":
             self.stop()
         if data == "Ping":
             ws.send("Pong")
+            print(data)
             if int(time.strftime('%M', time.localtime(time.time()))) % 30 == 0 and (not self.extendListenKeyStatus):
-                #print('its time to extend key .... .... .... .... .... .... ... ... ...')
+                print('its time to extend key .... .... .... .... .... .... ... ... ...')
                 self.extendListenKey()
                 self.extendListenKeyStatus = True
             elif int(time.strftime('%M', time.localtime(time.time()))) % 30 != 0:
@@ -72,7 +74,7 @@ class BingxWS:
 
 
     def on_close(self, ws, close_status_code, close_msg):
-        print("### closed ###")
+        #print("### closed ###")
         if close_status_code or close_msg:
             print("close status code: " + str(close_status_code))
             print("close message: " + str(close_msg))
@@ -82,7 +84,7 @@ class BingxWS:
 
 
     def start(self):
-        websocket.enableTrace(True)
+        #websocket.enableTrace(True)
         self.getListenKey()
         self.url = f"wss://open-api-swap.bingx.com/swap-market?listenKey={self.listenKey}"
         print(self.url)
@@ -119,15 +121,34 @@ def handler(data, Bingx):
     try: 
         data = json.loads(data)
         # print(data)
-        if 'e' in data:
-            event = data['a']['m'] # event type
-            position = data['a']['m']['P'] # list
-            symbol = position['s']
-            entry_price = position['ea']
-            profit = position['up']
-            margin_mode = position['mt'] #isolate/cross
-            margin = position['iw']
-            position_direction = position['ps']
+        if data['e'] == "ORDER_TRADE_UPDATE": # e = ORDER_TRADE_UPDATE/ ACCOUNT_CONFIG_UPDATE/ ACCOUNT_UPDATE
+            logger.info(f"{data}")
+            data = data['o']
+            symbol = data['s']
+            clientOrderID = data['c']
+            side = data['S'] # SELL/BUY
+            order_type = data['o'] # MARKET/ TRIGGER_LIMIT/ LIMIT
+            qty = data['q']
+            price = data['p']
+            trigger_price = data['sp']
+            execution_type = data['x'] # TRADE
+            status = data['X'] # FILLED
+            position_direction = data['ps']
+
+            if order_type == "TRIGGER_LIMIT" and status == "FILLED":
+                from producer import publish
+                body = {}
+                body['symbol'] = symbol
+                body['side'] = side
+                body['positionSide'] = position_direction
+                body['price'] = price
+                body['qty'] = qty
+                publish(body=json.dumps(body))
+                logger.info('tiggered ... ... ...')
+
+                
+
+
 
     except Exception as e:
         # logger.exception(f"{e}")
