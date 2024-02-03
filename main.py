@@ -94,7 +94,7 @@ def place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL):
 	# 
 	positionSide = "SHORT" if positionSide == "LONG" else "LONG"
 	side = "SELL" if positionSide == "SHORT" else "BUY"
-	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, price=SL, stopPrice=SL, quantity=2*qty, 
+	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, price=SL, stopPrice=SL, quantity=2*float(qty), 
                      tradeType='TRIGGER_LIMIT')
 	logger.info(f"{res}")
 
@@ -114,7 +114,7 @@ def add_to_db(symbol, positionSide_db, price, qty):
 		signal.symbol = symbol
 		signal.side = positionSide_db
 		signal.price = price
-		signal.qty = qty
+		signal.qty = round(float(qty), 4)
 		# signal.time = datetime.fromtimestamp(time_/1000)
 		signal.time = datetime.now().strftime('%y-%m-%d %H:%M:%S')
 		db = SessionLocal()
