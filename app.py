@@ -38,7 +38,7 @@ async def run(tasks: BackgroundTasks, db: Session=Depends(get_db)):
     get_user_params(db=db)
     Bingx.bot = "Run"
     tasks.add_task(init_orders)
-    # threading.Thread(target=Bingx_socket).start()
+    threading.Thread(target=Bingx_socket).start()
     
     logger.info("Bingx started ... ... ...")
     return  RedirectResponse(url="/admin/home")

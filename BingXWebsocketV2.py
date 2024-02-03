@@ -135,7 +135,8 @@ def handler(data, Bingx):
             status = data['X'] # FILLED
             position_direction = data['ps']
 
-            if order_type == "TRIGGER_LIMIT" and status == "FILLED":
+            # if order_type == "TRIGGER_LIMIT" and status == "FILLED":
+            if 2>1:
                 from producer import publish
                 body = {}
                 body['symbol'] = symbol
@@ -143,6 +144,8 @@ def handler(data, Bingx):
                 body['positionSide'] = position_direction
                 body['price'] = price
                 body['qty'] = qty
+                body['TP'] = Bingx.TP_percent
+                body['SL'] = Bingx.SL_percent
                 publish(body=json.dumps(body))
                 logger.info('tiggered ... ... ...')
 

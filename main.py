@@ -78,14 +78,14 @@ def placeOrders(symbol, side, tradeType, positionSide, price, qty, leverage):
 	logger.info(f"load to sqlite. {symbol}---{side}---{datetime.now().strftime('%y-%m-%d %H:%M:%S')}")
 
 
-def place_tp_sl_limit(symbol, side, positionSide, price, qty):
+def place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL):
 	if positionSide == "LONG":
-		TP = price * (1 + Bingx.TP_percent/100)
-		SL = price * (1 - Bingx.SL_percent/100)
+		TP = price * (1 + TP/100)
+		SL = price * (1 - SL/100)
 		side = "SELL"
 	else:
-		TP = price * (1 - Bingx.TP_percent/100)
-		SL = price * (1 + Bingx.SL_percent/100)
+		TP = price * (1 - TP/100)
+		SL = price * (1 + SL/100)
 		side = "BUY"
 
 	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, 
@@ -109,8 +109,8 @@ def place_tp_sl_limit(symbol, side, positionSide, price, qty):
 	logger.info(f"{res}")
 
 
-def triger_action(symbol, side, positionSide, price, qty):
+def triger_action(symbol, side, positionSide, price, qty, TP, SL):
 	res = api.closeOrders(symbol=symbol)
 	logger.info(f"{res}")
-	place_tp_sl_limit(symbol, side, positionSide, price, qty)
+	place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL)
 	

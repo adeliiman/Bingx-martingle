@@ -1,7 +1,6 @@
 import pika, sys, os, time, json
 import threading
 from main import Bingx, api
-from utils import update_all_klines
 from setLogger import get_logger
 
 
@@ -24,9 +23,11 @@ def main():
             positionSide = data['positionSide']
             price = data['price']
             qty = data['qty']
+            TP = data['TP']
+            SL = data['SL']
 
             from main import triger_action
-            triger_action(symbol=symbol, side=side, positionSide=positionSide, price=price, qty=qty)
+            triger_action(symbol=symbol, side=side, positionSide=positionSide, price=price, qty=qty, TP=TP, SL=SL)
 
         except Exception as e:
             logger.exception(f"{e}")
