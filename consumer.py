@@ -39,6 +39,8 @@ def main():
 
 threading.Thread(target=main).start()
 threading.Thread(target=main).start()
+threading.Thread(target=main).start()
+threading.Thread(target=main).start()
 
 
 
