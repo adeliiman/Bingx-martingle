@@ -209,13 +209,36 @@ class BingXApi:
 
 
 # api = BingXApi(APIKEY=config['api_key'], SECRETKEY=config['api_secret'], demo=False)
+
+# def test(symbol="BTC-USDT", side="BUY", position_side="LONG", lever=10, value=5, profit=50):
+# 	#print(api.setLeverage(symbol, position_side, lever))
+# 	price = api.getLatestPrice(symbol=symbol)
+# 	price = float(price['data']['price'])
+# 	qty=(value*lever)/price
+	
+# 	print(api.placeOrder(symbol=symbol, side=side, positionSide=position_side, price=price, quantity=qty, tradeType='MARKET'))
+# 	TP = price + profit/value
+	
+# 	side = "SELL" if position_side == "LONG" else "BUY"
+# 	print(api.placeOrder(symbol=symbol, side=side, positionSide=position_side, stopPrice=TP, price=TP, quantity=qty, tradeType='TAKE_PROFIT'))
+# 	SL = price - profit/value
+	
+# 	print(api.placeOrder(symbol=symbol, side=side,positionSide=position_side, stopPrice=SL, price=SL, quantity=qty, tradeType='STOP'))
+	
+# 	print("value: ", value, "/lever: ", lever, "/profit: ", profit)
+# 	print('quantity: ', qty)
+# 	print("TP: ", TP)
+# 	print("price: ", price)
+# 	print("SL: ", SL)
+# test()
+
 # print(api.closeAllOrders())
-# print(api.getBalance())
+#print(api.getBalance())
 # print(api.getPositions(symbol="BTC-USDT")['data'][0])
 # print(api.getOrders("BTC-USDT"))
 # api.closeAllPositions()
-
-# print(api.placeOrder(symbol="BTC-USDT", side="BUY",positionSide="LONG", price='42000', quantity=.0001, tradeType='MARKET'))
+# print(api.setLeverage("BTC-USDT", "LONG", '10'))
+# print(api.placeOrder(symbol="BTC-USDT", side="BUY",positionSide="LONG", price='42000', quantity=(5*10)/43000, tradeType='MARKET'))
 # print(api.placeOrder(symbol="BTC-USDT", side="SELL",positionSide="LONG", stopPrice='40000', price=42000, quantity=1, tradeType='STOP'))
 # print(api.placeOrder(symbol="BTC-USDT", side="SELL",positionSide="LONG", stopPrice='46500', price=42000, quantity=1, tradeType='TAKE_PROFIT'))
 # res = api.placeOrder(symbol="BTC-USDT", side="BUY",positionSide="LONG", price='43000', quantity=.0001, 
@@ -263,7 +286,7 @@ class BingXApi:
 #             takeProfit=take_profit,
 #             stopLoss=stop_loss)
 # print(res)
-# print(api.setLeverage("BTC-USDT", "LONG", '20'))
+
 
 
 

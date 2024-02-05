@@ -18,7 +18,7 @@ def init_orders():
         price = float(price['data']['price'])
 
         side = "SELL" if position_side == "SHORT" else "BUY"
-        qty = Bingx.trade_value / price
+        qty = (Bingx.trade_value * Bingx.leverage) / price
         
         from main import placeOrders
         
