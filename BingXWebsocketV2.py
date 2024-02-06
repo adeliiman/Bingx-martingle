@@ -146,6 +146,7 @@ def handler(data, Bingx):
                 body['TP'] = Bingx.TP_percent
                 body['SL'] = Bingx.SL_percent
                 body['leverage'] = Bingx.leverage
+                body['init_qty'] = Bingx.init_qty
                 publish(body=json.dumps(body))
                 logger.info('tiggered ... ... ...')
 

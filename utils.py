@@ -19,6 +19,7 @@ def init_orders():
 
         side = "SELL" if position_side == "SHORT" else "BUY"
         qty = (Bingx.trade_value * Bingx.leverage) / price
+        Bingx.init_qty = qty
         
         from main import placeOrders
         
@@ -37,8 +38,8 @@ def get_user_params(db: Session):
         user_symbols = db.query(UserSymbols).all()
 
         Bingx.leverage = user.leverage
-        Bingx.TP_percent = user.TP_percent
-        Bingx.SL_percent = user.SL_percent
+        Bingx.TP_percent = user.TP_percent / user.leverage
+        Bingx.SL_percent = user.SL_percent / user.leverage
         Bingx.trade_value = user.trade_value
         
         Bingx.symbols = []

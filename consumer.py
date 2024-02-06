@@ -26,9 +26,11 @@ def main():
             TP = data['TP']
             SL = data['SL']
             leverage = int(data['leverage'])
+            init_qty = float(data['init_qty']) 
 
             from main import triger_action
-            triger_action(symbol=symbol, side=side, positionSide=positionSide, price=price, qty=qty, TP=TP, SL=SL, leverage=leverage)
+            triger_action(symbol=symbol, side=side, positionSide=positionSide, price=price, qty=qty, 
+                          TP=TP, SL=SL, leverage=leverage, init_qty=init_qty)
 
         except Exception as e:
             logger.exception(f"{e}")

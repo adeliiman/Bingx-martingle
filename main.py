@@ -26,6 +26,7 @@ class BingX:
 	SL_percent: float
 	trade_value: int
 	symbols: list = []
+	init_qty: float
       
 
 Bingx = BingX()
@@ -45,9 +46,7 @@ def placeOrders(symbol, side, tradeType, positionSide, price, qty, leverage):
 		TP = price * (1 - Bingx.TP_percent/100)
 		SL = price * (1 + Bingx.SL_percent/100)
 
-	TP = TP/leverage
-	SL = SL/leverage
-
+	
 	take_profit = "{\"type\": \"TAKE_PROFIT_MARKET\", \"quantity\": %s,\"stopPrice\": %s,\"price\": %s,\"workingType\":\"MARK_PRICE\"}"% (qty, TP, TP)
 	stop_loss = "{\"type\": \"STOP_MARKET\", \"quantity\": %s,\"stopPrice\": %s,\"price\": %s,\"workingType\":\"MARK_PRICE\"}"% (qty, SL, SL)
 	res = api.placeOrder(symbol=symbol, side=f"{side}", positionSide=f"{positionSide}", tradeType=tradeType, 
@@ -71,7 +70,7 @@ def placeOrders(symbol, side, tradeType, positionSide, price, qty, leverage):
 	add_to_db(symbol=symbol, positionSide_db=positionSide_db, price=price, qty=qty)
 
 
-def place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL, leverage):
+def place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL, leverage, init_qty):
 	if positionSide == "LONG":
 		TP = price * (1 + TP/100)
 		SL = price * (1 - SL/100)
@@ -81,8 +80,6 @@ def place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL, leverage):
 		SL = price * (1 + SL/100)
 		side = "BUY"
 
-	TP = TP/leverage
-	SL = SL/leverage
 
 	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, 
 					  stopPrice=SL, price=SL, quantity=qty, tradeType='STOP')
@@ -94,7 +91,7 @@ def place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL, leverage):
 	
 	# trigger limit orders
 	side = "SELL" if positionSide == "SHORT" else "BUY"
-	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, price=TP, stopPrice=TP, quantity=qty, 
+	res = api.placeOrder(symbol=symbol, side=side, positionSide=positionSide, price=TP, stopPrice=TP, quantity=init_qty, 
                      tradeType='TRIGGER_LIMIT')
 	logger.info(f"{res}")
 	# 
@@ -105,10 +102,10 @@ def place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL, leverage):
 	logger.info(f"{res}")
 
 
-def triger_action(symbol, side, positionSide, price, qty, TP, SL, leverage):
+def triger_action(symbol, side, positionSide, price, qty, TP, SL, leverage, init_qty):
 	res = api.closeOrders(symbol=symbol)
 	logger.info(f"{res}")
-	place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL, leverage)
+	place_tp_sl_limit(symbol, side, positionSide, price, qty, TP, SL, leverage, init_qty)
 
 	add_to_db(symbol=symbol, positionSide_db=positionSide, price=price, qty=qty)
 	
